@@ -1,11 +1,15 @@
 package com.anshu.askit;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -15,6 +19,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.anshu.askit.adapters.QuestionsAdapter;
 import com.anshu.askit.models.Question;
@@ -33,15 +38,20 @@ import java.util.List;
 import java.util.Set;
 
 public class DashBoard extends AppCompatActivity {
-ArrayList<Question> questionArrayList;
-FirebaseFirestore db = FirebaseFirestore.getInstance();
-CollectionReference qn = db.collection("Question");
-DocumentReference UIDRef = db.document("UniqueId/UID");
-QuestionsAdapter questionsAdapter;
-FloatingActionButton fab;
-ImageButton search;
-RecyclerView recyclerView;
-EditText searchField;
+    ArrayList<Question> questionArrayList;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    CollectionReference qn = db.collection("Question");
+    DocumentReference UIDRef = db.document("UniqueId/UID");
+    QuestionsAdapter questionsAdapter;
+    FloatingActionButton fab;
+    ImageButton search;
+    RecyclerView recyclerView;
+    EditText searchField;
+    SwipeRefreshLayout swipeRefreshLayout;
+    ProgressBar progressBar;
+    TextView signOut;
+    SharedPreferences sharedPref;
+    SharedPreferences.Editor editor;
     private final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
             "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if",
             "in", "into", "is", "it", "no", "not", "of", "on", "or", "such",
@@ -59,14 +69,12 @@ EditText searchField;
             return insets;
         });
         questionArrayList = new ArrayList<>();
-
-        questionArrayList.add(new Question("What is Java?","A programming language","Coding,Java",10,5,100));
-        questionArrayList.add(new Question("What is DBMS?","A Database Management System","Coding,Database",5,2,101));
-         recyclerView= findViewById(R.id.recyclerView);
+        recyclerView= findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         questionsAdapter = new QuestionsAdapter(this,questionArrayList);
         recyclerView.setAdapter(questionsAdapter);
         searchField = findViewById(R.id.editTextText);
+        progressBar = findViewById(R.id.progressBar2);
         fab = findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,11 +82,34 @@ EditText searchField;
                 startActivity(new Intent(DashBoard.this,QuestionActivity.class));
             }
         });
+
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                Refresh();
+            }
+        });
+
         UIDRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 long uid = documentSnapshot.getLong("ID");
                 Fetch(uid);
+            }
+        });
+        sharedPref=getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        editor = sharedPref.edit();
+        signOut = findViewById(R.id.textView11);
+        signOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editor.putBoolean("LoggedIn",false);
+                editor.putString("username", "");
+                editor.putString("email", "");
+                editor.apply();
+                startActivity(new Intent(DashBoard.this,SignIn.class));
             }
         });
         search = findViewById(R.id.imageButton);
@@ -95,6 +126,27 @@ EditText searchField;
             }
         });
     }
+
+    private void Refresh() {
+        qn.get().addOnSuccessListener(queryDocumentSnapshots -> {
+            List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+            questionArrayList.clear();
+
+            for (DocumentSnapshot document : documents) {
+                Question question = document.toObject(Question.class);
+                if (question != null) {
+                    questionArrayList.add(question);
+                }
+            }
+
+            questionsAdapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+        }).addOnFailureListener(e -> {
+            Toast.makeText(DashBoard.this, "Failed to refresh data", Toast.LENGTH_SHORT).show();
+            swipeRefreshLayout.setRefreshing(false);
+        });
+    }
+
     public void Fetch(long uid)
     {
         if(uid==100)
@@ -107,6 +159,7 @@ EditText searchField;
                 Question que = documentSnapshot.toObject(Question.class);
                 questionArrayList.add(que);
                 questionsAdapter.notifyItemInserted(questionArrayList.size()-1);
+                progressBar.setVisibility(View.GONE);
                 Fetch(uid-1);
             }
         });

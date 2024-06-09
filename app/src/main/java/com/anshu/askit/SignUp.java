@@ -100,6 +100,7 @@ public class SignUp extends AppCompatActivity {
                                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPref.edit();
                         editor.putString("username", username);
+                        editor.putString("email", email);
                         editor.putBoolean("LoggedIn", true);
                         editor.apply();
                         finish();

@@ -3,6 +3,9 @@
     <style name="Base.Theme.AskIt" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">#3572EF</item>
+        <item name="colorPrimaryDark">#050C9C</item>">
+        <item name="android:statusBarColor">#050C9C</item>
     </style>
 
     <style name="Theme.AskIt" parent="Base.Theme.AskIt" />
