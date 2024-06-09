@@ -1,6 +1,6 @@
 package com.anshu.askit.models;
 
-public class Question {
+public class Question implements Comparable<Question>, java.io.Serializable {
     public String question;
     public String answer;
     public String tags;
@@ -21,4 +21,8 @@ public class Question {
 
     }
 
+    @Override
+    public int compareTo(Question o) {
+        return 0;
+    }
 }

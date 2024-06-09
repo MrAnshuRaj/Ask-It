@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Ask It</string>
+    <string name="preference_file_key">AskIT</string>
 </resources>

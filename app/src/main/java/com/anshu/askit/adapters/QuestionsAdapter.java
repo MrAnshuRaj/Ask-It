@@ -2,17 +2,24 @@ package com.anshu.askit.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.anshu.askit.AnswerActivity;
 import com.anshu.askit.R;
 import com.anshu.askit.models.Question;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +28,9 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.MyVi
     Context context;
     ArrayList<Question> arrayList;
     String tags;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    CollectionReference qn = db.collection("Question");
+    DocumentReference UIDRef = db.document("UniqueId/UID");
     public QuestionsAdapter(Context context, ArrayList<Question> arrayList)
     {
         this.context=context;
@@ -49,6 +59,7 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.MyVi
                     arrayList.get(position).upVotes++;
                     holder.upVotes.setText(""+arrayList.get(position).upVotes);
                     arrayList.get(position).upClick=true;
+                    qn.document(""+arrayList.get(position).uniqueID).update("upVotes",arrayList.get(position).upVotes);
                 }
             }
         });
@@ -59,9 +70,19 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.MyVi
                     arrayList.get(position).downVotes++;
                     holder.downVotes.setText(""+arrayList.get(position).downVotes);
                     arrayList.get(position).downClick = true;
+                    qn.document(""+arrayList.get(position).uniqueID).update("downVotes",arrayList.get(position).downVotes);
                 }
             }
         });
+        holder.ansBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, AnswerActivity.class);
+                intent.putExtra("UID",arrayList.get(position).uniqueID+"");
+                context.startActivity(intent);
+            }
+        });
+
     }
 
     @Override
@@ -73,6 +94,7 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.MyVi
     {
         TextView question,answer,tags,upVotes,downVotes;
         ImageView upVoteBtn,downVoteBtn;
+        Button ansBtn;
         public MyViewHolder(View itemView) {
             super(itemView);
             question = itemView.findViewById(R.id.textView4);
@@ -82,6 +104,7 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.MyVi
             downVotes = itemView.findViewById(R.id.textView8);
             upVoteBtn = itemView.findViewById(R.id.imageView2);
             downVoteBtn = itemView.findViewById(R.id.imageView3);
+            ansBtn = itemView.findViewById(R.id.AnsButton);
         }
     }
 }

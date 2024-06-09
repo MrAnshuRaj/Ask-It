@@ -41,7 +41,7 @@ Button submit;
         });
         question = findViewById(R.id.question);
         tags = findViewById(R.id.tags);
-        submit = findViewById(R.id.button);
+        submit = findViewById(R.id.buttonSbm);
         submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -49,7 +49,6 @@ Button submit;
                 QuestionActivity.super.onBackPressed();
             }
         });
-
     }
     public void submitQuestion()
     {
